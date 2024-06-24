@@ -1,6 +1,6 @@
 # 1st Generation Pokémon Comparison Tool 🔮
 
-[![Open in Streamlit](https://pokemon-comparison-dashboard-h7palpnwt58acucacutsbz.streamlit.app/)
+[Open in Streamlit](https://pokemon-comparison-dashboard-h7palpnwt58acucacutsbz.streamlit.app/)
 
 ### How to run it on your own machine
 
