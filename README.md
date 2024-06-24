@@ -1,4 +1,4 @@
-# 1$^{st}$ Generation Pokémon Comparison Tool 🔮
+# 1st Generation Pokémon Comparison Tool 🔮
 
 [![Open in Streamlit]()
 
