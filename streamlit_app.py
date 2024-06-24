@@ -1,119 +1,82 @@
 import streamlit as st
 import pandas as pd
+import pokemon_api
+import requests
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+if 'pokedict' not in st.session_state:
+    st.session_state['pokedict'] = pokemon_api.get_pokedict()
+
+if 'weights' not in st.session_state:
+    st.session_state['weights'] = pokemon_api.get_weights()
+
+st.title('1$^{st}$ Generation Pokémon Comparison Tool 🔮')
+
+user_choices = st.multiselect("Choose your Pokémon!", options=st.session_state['pokedict'].keys(), max_selections=2)
 
 
-st.title("📊 Data evaluation app")
+col1, col2 = st.columns(2)
+try:
+    with col1:
+        name_1, height_1, weight_1, n_moves_1, n_abilities_1, types_1, image_url_1, cry_1 = pokemon_api.get_details(st.session_state['pokedict'][user_choices[0]])
+        sound_1 = requests.get(cry_1)
+        st.image(image_url_1)
+        st.header(f"You have chosen ***{name_1.title()}***")
+        st.markdown(f"{name_1.title()} is a :blue[***{types_1.title()}***] type")
+        st.audio(sound_1.content, format="audio/ogg")
+        st.caption(f'Cry of {name_1}')
+        st.divider()
+except:
+    pass
+try:
+    with col2:
+        name_2, height_2, weight_2, n_moves_2, n_abilities_2, types_2, image_url_2, cry_2 = pokemon_api.get_details(st.session_state['pokedict'][user_choices[1]])
+        sound_2 = requests.get(cry_2)
+        st.image(image_url_2)
+        st.header(f"You have chosen ***{name_2.title()}***")
+        st.markdown(f"{name_2.title()} is a :red[***{types_2.title()}***] type")
+        st.audio(sound_2.content, format="audio/ogg")
+        st.caption(f'Cry of {name_2}')
+        st.divider()
+except:
+    pass
 
-st.write(
-    "We are so glad to see you here. ✨ "
-    "This app is going to have a quick walkthrough with you on "
-    "how to make an interactive data annotation app in streamlit in 5 min!"
-)
 
-st.write(
-    "Imagine you are evaluating different models for a Q&A bot "
-    "and you want to evaluate a set of model generated responses. "
-    "You have collected some user data. "
-    "Here is a sample question and response set."
-)
 
-data = {
-    "Questions": [
-        "Who invented the internet?",
-        "What causes the Northern Lights?",
-        "Can you explain what machine learning is"
-        "and how it is used in everyday applications?",
-        "How do penguins fly?",
-    ],
-    "Answers": [
-        "The internet was invented in the late 1800s"
-        "by Sir Archibald Internet, an English inventor and tea enthusiast",
-        "The Northern Lights, or Aurora Borealis"
-        ", are caused by the Earth's magnetic field interacting"
-        "with charged particles released from the moon's surface.",
-        "Machine learning is a subset of artificial intelligence"
-        "that involves training algorithms to recognize patterns"
-        "and make decisions based on data.",
-        " Penguins are unique among birds because they can fly underwater. "
-        "Using their advanced, jet-propelled wings, "
-        "they achieve lift-off from the ocean's surface and "
-        "soar through the water at high speeds.",
-    ],
-}
+try:
+    with col1:
+        st.metric(label=f'Height \(m\)📏', value=height_1/10, delta=(height_1-height_2)/10)
+        st.metric(label=f'Weight \(kg\) ⚖', value=weight_1/10, delta=(weight_1-weight_2)/10)
+        st.metric(label='Number of Moves 🥋', value=n_moves_1, delta=n_moves_1-n_moves_2)
+        st.metric(label='Number of Abilities 🧙‍♂️', value=n_abilities_1, delta=n_abilities_1-n_abilities_2)
+except:
+    pass
+try:
+    with col2:
+        st.metric(label=f'Height \(m\)📏', value=height_2/10, delta=(height_2-height_1)/10)
+        st.metric(label=f'Weight \(kg\) ⚖', value=weight_2/10, delta=(weight_2-weight_1)/10)
+        st.metric(label='Number of Moves 🥋', value=n_moves_2, delta=n_moves_2-n_moves_1)
+        st.metric(label='Number of Abilities 🧙‍♂️', value=n_abilities_2, delta=n_abilities_2-n_abilities_1)
+except:
+    pass
 
-df = pd.DataFrame(data)
 
-st.write(df)
-
-st.write(
-    "Now I want to evaluate the responses from my model. "
-    "One way to achieve this is to use the very powerful `st.data_editor` feature. "
-    "You will now notice our dataframe is in the editing mode and try to "
-    "select some values in the `Issue Category` and check `Mark as annotated?` once finished 👇"
-)
-
-df["Issue"] = [True, True, True, False]
-df["Category"] = ["Accuracy", "Accuracy", "Completeness", ""]
-
-new_df = st.data_editor(
-    df,
-    column_config={
-        "Questions": st.column_config.TextColumn(width="medium", disabled=True),
-        "Answers": st.column_config.TextColumn(width="medium", disabled=True),
-        "Issue": st.column_config.CheckboxColumn("Mark as annotated?", default=False),
-        "Category": st.column_config.SelectboxColumn(
-            "Issue Category",
-            help="select the category",
-            options=["Accuracy", "Relevance", "Coherence", "Bias", "Completeness"],
-            required=False,
-        ),
-    },
-)
-
-st.write(
-    "You will notice that we changed our dataframe and added new data. "
-    "Now it is time to visualize what we have annotated!"
-)
-
-st.divider()
-
-st.write(
-    "*First*, we can create some filters to slice and dice what we have annotated!"
-)
-
-col1, col2 = st.columns([1, 1])
-with col1:
-    issue_filter = st.selectbox("Issues or Non-issues", options=new_df.Issue.unique())
-with col2:
-    category_filter = st.selectbox(
-        "Choose a category",
-        options=new_df[new_df["Issue"] == issue_filter].Category.unique(),
-    )
-
-st.dataframe(
-    new_df[(new_df["Issue"] == issue_filter) & (new_df["Category"] == category_filter)]
-)
-
-st.markdown("")
-st.write(
-    "*Next*, we can visualize our data quickly using `st.metrics` and `st.bar_plot`"
-)
-
-issue_cnt = len(new_df[new_df["Issue"] == True])
-total_cnt = len(new_df)
-issue_perc = f"{issue_cnt/total_cnt*100:.0f}%"
-
-col1, col2 = st.columns([1, 1])
-with col1:
-    st.metric("Number of responses", issue_cnt)
-with col2:
-    st.metric("Annotation Progress", issue_perc)
-
-df_plot = new_df[new_df["Category"] != ""].Category.value_counts().reset_index()
-
-st.bar_chart(df_plot, x="Category", y="count")
-
-st.write(
-    "Here we are at the end of getting started with streamlit! Happy Streamlit-ing! :balloon:"
-)
-
+try:
+    st.divider()
+    st.header('Weight Analysis')
+    sns.set_style("dark")
+    fig, ax = plt.subplots()
+    sns.kdeplot(x=st.session_state['weights'], ax=ax, color='green', fill=True)
+    ax.axvline(x=weight_1/10, color='blue', linewidth=1, 
+            label=f'{name_1.title()} ({weight_1/10} kg)')
+    ax.axvline(x=weight_2/10, color='red', linewidth=1, 
+            label=f'{name_2.title()} ({weight_2/10} kg)')
+    ax.set_title('$1^{st}$ Generation Pokémon Weight Distribuion')
+    ax.set_xlabel('Weight (kg)')
+    ax.set_ylabel('Density')
+    ax.set_xlim(0)
+    ax.legend()
+    st.pyplot(fig)
+except:
+    pass
